@@ -18,6 +18,10 @@ Runs **100% locally on your machine's CPU power** with **zero external LLM API c
 
 ## Key Capabilities
 
+* **Personal Records (PR / PB) Engine**: Queries verified telemetry best efforts (`ActivityBestEffort` table) across standard benchmark distances (400m, 800m, 1K, 1 Mile, 2 Miles, 5K, 10K, 15K). Returns all-time record times, paces, speeds, dates, run titles, and top 5 historical efforts.
+* **Dual-Mode TAG Intelligence Architecture**:
+  * **Mode 1: LLM Tool-Augmented Generation (TAG)**: When provided with a Google Gemini or OpenAI API key, uses real function calling against the analytics tools to provide natural coach-level commentary.
+  * **Mode 2: Enhanced Offline Deterministic TAG Engine**: Operates with 0 external API calls and 0 tokens on local CPU power with sub-millisecond intent resolution for PRs, dates, intervals, and aerobic metrics.
 * **Natural Language Interval Workout Parsing**: Accepts structured arbitrary workout plans like:
   * `"1k warmup + 4x1K @6:15 with 90s walk + 0.5k cooldown"`
   * `"0.8k easy, 2x1.5k @ 6:00, 1k @ 7:00"`
@@ -256,6 +260,15 @@ streamlit run app.py --server.port 8501 --server.address 0.0.0.0
 
 ## Sample Prompts to Try
 
+* **Personal Records (PR / PB)**:
+  * `"Tell me about my 1K PB"`
+  * `"What are all my personal records across benchmark distances?"`
+  * `"What is my 5K PR?"`
+  * `"How fast was my fastest mile?"`
+* **Activity & Date Search**:
+  * `"What did I run on Oct 11?"`
+  * `"Show me details for Navratri Day 1"`
+  * `"Show runs on the beach"`
 * **Interval Workout Analysis**:
   * `"Analyze today's run: 1k warmup + 4x1K @6:15 with 90s walk + 0.5k cooldown"`
   * `"Analyze workout: 0.8k easy, 2x1.5k @ 6:00, 1k @ 7:00"`

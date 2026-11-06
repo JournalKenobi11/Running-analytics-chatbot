@@ -58,6 +58,18 @@ def format_pace(minutes_float):
         secs = 0
     return f"{mins}:{secs:02d} /km"
 
+def format_duration(seconds):
+    """Format duration in seconds to 'MM:SS' or 'H:MM:SS'."""
+    if pd.isna(seconds) or seconds is None or seconds < 0:
+        return "N/A"
+    total_sec = int(round(seconds))
+    hrs = total_sec // 3600
+    mins = (total_sec % 3600) // 60
+    secs = total_sec % 60
+    if hrs > 0:
+        return f"{hrs}:{mins:02d}:{secs:02d}"
+    return f"{mins}:{secs:02d}"
+
 def get_activities_dataframe(days=None, sport="Run", with_hr_only=False, search=None, db_path=DB_DEFAULT_PATH):
     """Extract and prepare pandas DataFrame of activities with calculated pace/speed."""
     conn = get_connection(db_path)
@@ -217,6 +229,234 @@ def get_activities_list(days=60, limit=20, sport="Run", with_hr_only=False, sear
             "speed_kmh": round(r['speed_kmh'], 2)
         })
     return results
+
+def parse_benchmark_distance(dist):
+    """
+    Parse a distance query into standard meters integer.
+    Supports '400m', '800m', '1k', '1 km', '1000m', '1 mile', '2 miles', '5k', '10k', '15k', 'half', 'marathon'.
+    """
+    if dist is None:
+        return None
+    if isinstance(dist, (int, float)):
+        d = float(dist)
+        return int(round(d * 1000 if d < 100 else d))
+    s = str(dist).strip().lower()
+    if s in ["all", "none", ""]:
+        return None
+    if "marathon" in s and "half" not in s:
+        return 42195
+    if "half" in s:
+        return 21097
+    if "mile" in s:
+        if "2" in s or "two" in s:
+            return 3218
+        if "half" in s or "0.5" in s:
+            return 804
+        return 1609
+    
+    m_km = re.search(r'([0-9]+(?:\.[0-9]+)?)\s*k(?:m)?\b', s)
+    if m_km:
+        return int(round(float(m_km.group(1)) * 1000))
+    
+    m_m = re.search(r'([0-9]+(?:\.[0-9]+)?)\s*(?:m|meter|meters)\b', s)
+    if m_m:
+        return int(round(float(m_m.group(1))))
+        
+    m_num = re.search(r'([0-9]+(?:\.[0-9]+)?)', s)
+    if m_num:
+        val = float(m_num.group(1))
+        return int(round(val * 1000 if val < 100 else val))
+    return None
+
+def get_distance_benchmark_label(meters):
+    """Return standard running benchmark label for given meters."""
+    if meters == 400:
+        return "400m"
+    elif meters in (804, 805, 800):
+        return "800m (1/2 Mile)"
+    elif meters == 1000:
+        return "1K"
+    elif meters == 1609:
+        return "1 Mile"
+    elif meters == 3218:
+        return "2 Miles"
+    elif meters == 5000:
+        return "5K"
+    elif meters == 10000:
+        return "10K"
+    elif meters == 15000:
+        return "15K"
+    elif meters == 21097:
+        return "Half Marathon"
+    elif meters == 42195:
+        return "Marathon"
+    elif meters < 1000:
+        return f"{meters}m"
+    else:
+        km = meters / 1000.0
+        return f"{km:.1f}K" if km % 1 != 0 else f"{int(km)}K"
+
+def _format_effort_record(row):
+    """Format single effort row into clean telemetry record."""
+    time_sec = row["timeInSeconds"]
+    dist_m = row["distanceInMeter"]
+    pace_min_km = (time_sec / (dist_m / 1000.0)) / 60.0 if dist_m > 0 else 0.0
+    speed_kmh = (dist_m / 1000.0) / (time_sec / 3600.0) if time_sec > 0 else 0.0
+    
+    avg_hr = None
+    if "averageHeartRate" in row.keys() and row["averageHeartRate"] is not None:
+        try:
+            avg_hr = int(round(float(row["averageHeartRate"])))
+        except (ValueError, TypeError):
+            pass
+            
+    start_dt = str(row["startDateTime"]) if "startDateTime" in row.keys() and row["startDateTime"] else ""
+    date_str = start_dt[:10] if len(start_dt) >= 10 else "N/A"
+    
+    return {
+        "distance_m": dist_m,
+        "distance_label": get_distance_benchmark_label(dist_m),
+        "time": format_duration(time_sec),
+        "time_seconds": time_sec,
+        "pace": format_pace(pace_min_km),
+        "pace_min_km": round(pace_min_km, 2),
+        "speed_kmh": round(speed_kmh, 2),
+        "date": date_str,
+        "activity_name": row["name"] if "name" in row.keys() else "Activity",
+        "activity_id": row["activityId"] if "activityId" in row.keys() else None,
+        "avg_hr": avg_hr
+    }
+
+def _get_records_from_activities_fallback(conn, target_meters=None, sport="Run"):
+    """
+    Fallback when ActivityBestEffort table is absent.
+    Estimates records from Activity table based on fastest overall run pace.
+    """
+    cur = conn.cursor()
+    query = """
+        SELECT activityId, name, distance, movingTimeInSeconds, startDateTime, averageHeartRate
+        FROM Activity
+        WHERE (sportType = ? OR activityType = ? OR ? IS NULL)
+          AND (markedForDeletion IS NULL OR markedForDeletion = 0)
+          AND distance > 0 AND movingTimeInSeconds > 0
+        ORDER BY (movingTimeInSeconds * 1.0 / distance) ASC
+    """
+    cur.execute(query, (sport, sport, sport))
+    rows = cur.fetchall()
+    if not rows:
+        return {"total_records": 0, "records": [], "message": "No activities found in database."}
+    
+    fastest = []
+    for r in rows[:10]:
+        dist_m = r["distance"]
+        time_sec = r["movingTimeInSeconds"]
+        pace_min_km = (time_sec / (dist_m / 1000.0)) / 60.0
+        fastest.append({
+            "distance_m": dist_m,
+            "distance_label": f"{dist_m/1000:.1f}K",
+            "time": format_duration(time_sec),
+            "time_seconds": time_sec,
+            "pace": format_pace(pace_min_km),
+            "pace_min_km": round(pace_min_km, 2),
+            "speed_kmh": round((dist_m / 1000.0) / (time_sec / 3600.0), 2),
+            "date": str(r["startDateTime"])[:10],
+            "activity_name": r["name"],
+            "activity_id": r["activityId"],
+            "avg_hr": int(round(r["averageHeartRate"])) if r["averageHeartRate"] else None
+        })
+    return {
+        "fallback_mode": True,
+        "message": "ActivityBestEffort table absent; showing fastest overall activities.",
+        "records": fastest
+    }
+
+def get_personal_records(distance=None, sport="Run", db_path=DB_DEFAULT_PATH):
+    """
+    Retrieve personal bests (PRs/PBs) from ActivityBestEffort table joined with Activity.
+    If distance is specified (e.g. '1k', '5k', 1000, 'mile', etc.), returns the personal best
+    along with the top 5 historical efforts for that benchmark distance.
+    If distance is None or 'all', returns personal records across all available benchmark distances.
+    Includes a fallback if ActivityBestEffort table is absent.
+    """
+    conn = get_connection(db_path)
+    cur = conn.cursor()
+    
+    # Verify ActivityBestEffort table exists
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='ActivityBestEffort';")
+    has_best_effort = bool(cur.fetchone())
+    
+    target_meters = parse_benchmark_distance(distance)
+    
+    if not has_best_effort:
+        return _get_records_from_activities_fallback(conn, target_meters, sport)
+
+    # Fetch all records from ActivityBestEffort
+    query = """
+        SELECT b.activityId, b.distanceInMeter, b.sportType, b.timeInSeconds,
+               a.name, a.startDateTime, a.averageHeartRate, a.maxHeartRate, a.distance AS totalDistanceMeters
+        FROM ActivityBestEffort b
+        JOIN Activity a ON b.activityId = a.activityId
+        WHERE (b.sportType = ? OR ? IS NULL)
+          AND (a.markedForDeletion IS NULL OR a.markedForDeletion = 0)
+        ORDER BY b.distanceInMeter ASC, b.timeInSeconds ASC
+    """
+    cur.execute(query, (sport, sport))
+    all_rows = cur.fetchall()
+    
+    if not all_rows:
+        return _get_records_from_activities_fallback(conn, target_meters, sport)
+        
+    # Group by distanceInMeter to find PBs and all efforts
+    all_prs_by_dist = {}
+    efforts_by_dist = {}
+    for r in all_rows:
+        d = r['distanceInMeter']
+        if d not in efforts_by_dist:
+            efforts_by_dist[d] = []
+        efforts_by_dist[d].append(r)
+        if d not in all_prs_by_dist or r['timeInSeconds'] < all_prs_by_dist[d]['timeInSeconds']:
+            all_prs_by_dist[d] = r
+            
+    summary_prs = [
+        _format_effort_record(all_prs_by_dist[d])
+        for d in sorted(all_prs_by_dist.keys())
+    ]
+    
+    if target_meters is None:
+        return {
+            "total_records": len(summary_prs),
+            "records": summary_prs
+        }
+        
+    # Find closest benchmark distance within 20% tolerance
+    avail_dists = sorted(efforts_by_dist.keys())
+    closest_dist = min(avail_dists, key=lambda d: abs(d - target_meters))
+    delta_ratio = abs(closest_dist - target_meters) / float(target_meters)
+    
+    if delta_ratio <= 0.20:
+        pb_row = all_prs_by_dist[closest_dist]
+        top_efforts = [
+            _format_effort_record(r)
+            for r in efforts_by_dist[closest_dist][:5]
+        ]
+        return {
+            "matched": True,
+            "target_query": distance,
+            "distance_m": closest_dist,
+            "distance_label": get_distance_benchmark_label(closest_dist),
+            "personal_best": _format_effort_record(pb_row),
+            "top_efforts": top_efforts,
+            "all_records": summary_prs
+        }
+    else:
+        target_label = get_distance_benchmark_label(target_meters)
+        return {
+            "matched": False,
+            "target_query": distance,
+            "target_distance": target_label,
+            "message": f"No benchmark record found for {target_label} in ActivityBestEffort.",
+            "all_records": summary_prs
+        }
 
 def get_splits_analysis(activity_id=None, days=None, month=None, summary_only=False, db_path=DB_DEFAULT_PATH):
     """
@@ -1161,6 +1401,11 @@ if __name__ == "__main__":
     p_act.add_argument("--with-hr", action="store_true", help="Only runs with HR")
     p_act.add_argument("--search", type=str, default=None, help="Search string")
 
+    # Personal Records / Best Efforts
+    p_rec = subparsers.add_parser("records", help="Get personal records (PRs / PBs) across benchmark distances")
+    p_rec.add_argument("--distance", type=str, default=None, help="Benchmark distance (e.g. 1k, 5k, 10k, mile, 400m, all)")
+    p_rec.add_argument("--sport", type=str, default="Run", help="Sport type")
+
     # Splits
     p_split = subparsers.add_parser("splits", help="Analyze kilometer splits and heart rate from telemetry streams")
     p_split.add_argument("--activity", type=str, default=None, help="Specific activity ID")
@@ -1194,6 +1439,9 @@ if __name__ == "__main__":
         print(json.dumps(res, indent=2))
     elif args.command == "activities":
         res = get_activities_list(days=args.days, limit=args.limit, with_hr_only=args.with_hr, search=args.search)
+        print(json.dumps(res, indent=2))
+    elif args.command == "records":
+        res = get_personal_records(distance=args.distance, sport=args.sport)
         print(json.dumps(res, indent=2))
     elif args.command == "splits":
         res = get_splits_analysis(activity_id=args.activity, days=args.days, month=args.month, summary_only=args.summary_only)
