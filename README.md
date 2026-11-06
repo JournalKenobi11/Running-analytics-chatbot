@@ -130,8 +130,8 @@ This connects to Strava, downloads your running activities with second-by-second
 
 2. **Clone & Configure**:
    ```bash
-   git clone https://github.com/JournalKenobi/dreeve-running-chat.git
-   cd dreeve-running-chat
+   git clone https://github.com/JournalKenobi11/Running-analytics-chatbot.git
+   cd Running-analytics-chatbot
    cp .env.example .env
    ```
 
@@ -172,7 +172,7 @@ If you prefer running directly on your host machine without Docker:
 sudo apt install -y python3.11 python3.11-venv python3-pip
 
 # 2. Clone repository & create venv
-cd dreeve-running-chat
+cd Running-analytics-chatbot
 python3.11 -m venv .venv
 source .venv/bin/activate
 
@@ -202,8 +202,8 @@ streamlit run app.py --server.port 8501 --server.address 0.0.0.0
 
 2. **Clone & Setup Environment**:
    ```bash
-   git clone https://github.com/JournalKenobi/dreeve-running-chat.git
-   cd dreeve-running-chat
+   git clone https://github.com/JournalKenobi11/Running-analytics-chatbot.git
+   cd Running-analytics-chatbot
    cp .env.example .env
    ```
 
@@ -234,7 +234,7 @@ streamlit run app.py --server.port 8501 --server.address 0.0.0.0
 
 2. **Clone & Create Environment**:
    ```bash
-   cd dreeve-running-chat
+   cd Running-analytics-chatbot
    python3.11 -m venv .venv
    source .venv/bin/activate
    ```

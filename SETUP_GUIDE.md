@@ -175,7 +175,7 @@ If you don't want to use Docker, you can run directly inside a standard Python 3
 #### 2. Create Virtual Environment & Install Dependencies
 ```bash
 # Navigate to the repo directory
-cd dreeve-running-chat
+cd Running-analytics-chatbot
 
 # Create and activate virtual environment
 python3.11 -m venv .venv
