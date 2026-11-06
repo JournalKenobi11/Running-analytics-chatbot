@@ -21,12 +21,12 @@ import zstandard
 
 DB_DEFAULT_PATH = os.environ.get(
     "DREEVE_DB_PATH",
-    "/home/journalkenobi/projects/dreeve/storage/database/dreeve.db"
+    str(Path.home() / "projects" / "dreeve" / "storage" / "database" / "dreeve.db")
 )
 
 OUTPUT_DEFAULT_DIR = os.environ.get(
     "DREEVE_OUTPUT_DIR",
-    "/home/journalkenobi/projects/dreeve-analytics/output"
+    str(Path(__file__).resolve().parent / "output")
 )
 
 def get_connection(db_path=DB_DEFAULT_PATH, binary=False):

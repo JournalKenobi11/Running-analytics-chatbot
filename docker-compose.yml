@@ -6,7 +6,7 @@ services:
     ports:
       - "8501:8501"
     volumes:
-      - /home/journalkenobi/projects/dreeve/storage/database:/data/database:ro
+      - ${DREEVE_DB_DIR:-../dreeve/storage/database}:/data/database:ro
       - ./output:/app/output:rw
       - ./app.py:/app/app.py:ro
       - ./dreeve_engine.py:/app/dreeve_engine.py:ro

@@ -17,8 +17,10 @@ if current_dir not in sys.path:
 import dreeve_engine
 
 # Configuration
-DB_PATH = os.environ.get("DREEVE_DB_PATH", "/home/journalkenobi/projects/dreeve/storage/database/dreeve.db")
-OUTPUT_DIR = os.environ.get("DREEVE_OUTPUT_DIR", "/home/journalkenobi/projects/dreeve-analytics/output")
+from pathlib import Path
+
+DB_PATH = os.environ.get("DREEVE_DB_PATH", str(Path.home() / "projects" / "dreeve" / "storage" / "database" / "dreeve.db"))
+OUTPUT_DIR = os.environ.get("DREEVE_OUTPUT_DIR", str(Path(__file__).resolve().parent / "output"))
 
 st.set_page_config(
     page_title="Dreeve Running Coach & Analytics",
