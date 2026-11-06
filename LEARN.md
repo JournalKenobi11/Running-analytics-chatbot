@@ -1,4 +1,4 @@
-# 🧠 Engineering Guide: Architecture, Concepts & Mental Models
+# Engineering Guide: Architecture, Concepts & Mental Models
 
 This document breaks down the software engineering concepts, design patterns, and architectural principles behind the **Dreeve Running Analytics Suite**.
 
@@ -16,9 +16,9 @@ Here is the exact difference:
 
 | Interface | Who is using it? | How does it communicate? | Does it need MCP? | Does it need an LLM? |
 | :--- | :--- | :--- | :--- | :--- |
-| **🐳 Docker Web Chatbot** (`app.py`) | **You (Human)** typing in a web browser | Direct Python function calls (`import dreeve_engine`) | ❌ **No** | ❌ **No** (Runs on local CPU) |
-| **🔌 MCP Server** (`dreeve_mcp.py`) | **AI Coding Assistants** (Antigravity, Claude, ChatGPT) | Standardized JSON-RPC protocol over `stdio` | ✅ **Yes** | ✅ **Yes** (The external AI is the LLM) |
-| **💻 CLI** (`dreeve-cli`) | **Terminal / Shell scripts** | Direct Python CLI execution via `argparse` | ❌ **No** | ❌ **No** (Runs on local CPU) |
+| **Docker Web Chatbot** (`app.py`) | **You (Human)** typing in a web browser | Direct Python function calls (`import dreeve_engine`) | **No** | **No** (Runs on local CPU) |
+| **MCP Server** (`dreeve_mcp.py`) | **AI Coding Assistants** (Antigravity, Claude, ChatGPT) | Standardized JSON-RPC protocol over `stdio` | **Yes** | **Yes** (The external AI is the LLM) |
+| **CLI** (`dreeve-cli`) | **Terminal / Shell scripts** | Direct Python CLI execution via `argparse` | **No** | **No** (Runs on local CPU) |
 
 ### The "USB Port" Analogy:
 * **`dreeve_engine.py` is the Hard Drive**: It has all your data, formulas, algorithms, and charts.
@@ -32,7 +32,7 @@ Here is the exact difference:
 This system combines several renowned software engineering paradigms:
 
 ### A. Hexagonal Architecture (Ports and Adapters)
-In traditional messy code, database calls, UI code, and business math are tangled together. 
+In traditional messy code, database calls, UI code, and business math are tangled together.
 In **Hexagonal Architecture**:
 1. **The Core (The Hexagon)**: `dreeve_engine.py` contains **pure business logic** (interval detection, cardiac drift math, telemetry decompression). It does not know or care if a browser, an AI, or a terminal is calling it.
 2. **The Adapters (The Ports)**:
@@ -43,15 +43,15 @@ In **Hexagonal Architecture**:
 
 ```text
                   +---------------------------+
-                  |   Web Browser (Human)     |
+                  |    Web Browser (Human)    |
                   +-------------+-------------+
                                 |
                          [ Streamlit Port ]
                                 |
 +------------------+            v            +-------------------+
-|  AI Assistant    | -> [ MCP Server Port ]  |   Terminal User   | -> [ CLI Port ]
-| (Antigravity/    |                         |  (Bash / Cron)    |
-|  Claude)         |                         +-------------------+
+|   AI Assistant   | -> [ MCP Server Port ]  |   Terminal User   | -> [ CLI Port ]
+|  (Antigravity /  |                         |   (Bash / Cron)   |
+|     Claude)      |                         +-------------------+
 +------------------+            |
                                 v
                +---------------------------------+

@@ -1,4 +1,4 @@
-# Dreeve Running Chatbot & Telemetry Coach 
+# Dreeve Running Chatbot & Telemetry Coach
 
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-red.svg)](https://streamlit.io/)
 [![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED.svg)](https://www.docker.com/)
@@ -16,7 +16,7 @@ Runs **100% locally on your machine's CPU power** with **zero external LLM API c
 
 ---
 
-##  Key Capabilities
+## Key Capabilities
 
 * **Natural Language Interval Workout Parsing**: Accepts structured arbitrary workout plans like:
   * `"1k warmup + 4x1K @6:15 with 90s walk + 0.5k cooldown"`
@@ -32,33 +32,33 @@ Runs **100% locally on your machine's CPU power** with **zero external LLM API c
 
 ---
 
-##  Architecture
+## Architecture
 
 ```mermaid
 flowchart TD
-    User[" Athlete / User (Browser @ :8501)"] --> Streamlit[" Streamlit App (app.py)"]
+    User["Athlete / User (Browser @ :8501)"] --> Streamlit["Streamlit App (app.py)"]
 
     subgraph IngestionAdapters["Data Ingestion Adapters"]
-        DreeveDB[(" Mode 1: Dreeve SQLite DB (dreeve.db :ro)")]
-        StravaAPI[" Mode 2: Strava API v3 (OAuth & Streams)"]
+        DreeveDB[("Mode 1: Dreeve SQLite DB (dreeve.db :ro)")]
+        StravaAPI["Mode 2: Strava API v3 (OAuth & Streams)"]
     end
 
     subgraph CoreEngine["Core Analytics Engine (dreeve_engine.py)"]
-        Streamlit --> Engine[" Telemetry & Signal Engine"]
-        Engine --> PlanParser[" Regex Workout Plan Parser"]
+        Streamlit --> Engine["Telemetry & Signal Engine"]
+        Engine --> PlanParser["Regex Workout Plan Parser"]
         Engine --> Segmentation["Work / Rest Segmenter & HR Drop Math"]
-        Engine --> DriftMath[" Cardiac Drift & Aerobic Decoupling"]
-        Engine --> Plotter[" Matplotlib 300 DPI & Plotly Visualizers"]
+        Engine --> DriftMath["Cardiac Drift & Aerobic Decoupling"]
+        Engine --> Plotter["Matplotlib 300 DPI & Plotly Visualizers"]
     end
 
     DreeveDB --> Engine
     StravaAPI --> Engine
-    Plotter -->|"Saves Images"| OutputDir[" output/ (Mounted Volume)"]
+    Plotter -->|"Saves Images"| OutputDir["output/ (Mounted Volume)"]
 ```
 
 ---
 
-##  Path 2: Strava API v3 Integration Guide (For Non-Dreeve Users)
+## Path 2: Strava API v3 Integration Guide (For Non-Dreeve Users)
 
 If you don't self-host Dreeve and track all your activities directly on **Strava**, you can connect the chatbot directly to Strava's official API to pull activities and second-by-second sensor streams (`time`, `distance`, `heartrate`, `cadence`, `altitude`).
 
@@ -105,7 +105,7 @@ This connects to Strava, downloads your running activities with second-by-second
 
 ---
 
-## 🐧 Setup Manual for Linux (Ubuntu, Debian, Fedora, Arch)
+## Setup Manual for Linux (Ubuntu, Debian, Fedora, Arch)
 
 ### Method A: Docker Deployment (Recommended)
 
@@ -189,7 +189,7 @@ streamlit run app.py --server.port 8501 --server.address 0.0.0.0
 
 ---
 
-##  Setup Manual for macOS (Apple Silicon M1/M2/M3/M4 & Intel)
+## Setup Manual for macOS (Apple Silicon M1/M2/M3/M4 & Intel)
 
 ### Method A: Docker Desktop for Mac (Recommended)
 
@@ -254,7 +254,7 @@ streamlit run app.py --server.port 8501 --server.address 0.0.0.0
 
 ---
 
-##  Sample Prompts to Try
+## Sample Prompts to Try
 
 * **Interval Workout Analysis**:
   * `"Analyze today's run: 1k warmup + 4x1K @6:15 with 90s walk + 0.5k cooldown"`
@@ -273,13 +273,13 @@ streamlit run app.py --server.port 8501 --server.address 0.0.0.0
 
 ---
 
-##  Local Privacy & Concurrency
+## Local Privacy & Concurrency
 
 * **Zero External Telemetry**: Your GPS tracks, heart rates, and fitness data never leave your computer.
 * **Safe Read-Only Database Connections**: The engine binds to SQLite with `?mode=ro` and uses Write-Ahead Logging (WAL). It will never corrupt or lock an active database.
 
 ---
 
-##  License
+## License
 
 This project is licensed under the [MIT License](LICENSE).

@@ -1,39 +1,39 @@
-# 🚀 Complete Setup & Architecture Guide
+# Complete Setup & Architecture Guide
 
 A comprehensive, step-by-step manual explaining how the **Running Chatbot & Telemetry Coach** works, how to prepare your running database (from a local Dreeve DB or directly via the Strava API), and how to launch the application using **Docker** or **Native Python** on Linux and macOS.
 
 ---
 
-## 🧠 Part 1: How It Works Under the Hood
+## Part 1: How It Works Under the Hood
 
 Unlike typical AI chatbots that send your private fitness data to cloud Large Language Models (LLMs), this system is built on **Deterministic Signal Processing and Local Computing**:
 
 ```mermaid
 flowchart TD
     subgraph DataSources["1. Telemetry Ingestion"]
-        Dreeve["🏠 Self-Hosted Dreeve (dreeve.db)"]
-        Strava["☁️ Strava Account (API v3)"]
-        StravaSync["⚙️ sync_strava.py (Ingestion Script)"]
+        Dreeve["Self-Hosted Dreeve (dreeve.db)"]
+        Strava["Strava Account (API v3)"]
+        StravaSync["sync_strava.py (Ingestion Script)"]
         Strava --> StravaSync
     end
 
     subgraph Database["2. Standard Local SQLite Store (running.db)"]
-        Dreeve --> LocalDB[("🗄️ SQLite Database\n- Activity (Distance, Time, Pace, HR)\n- ActivityStream (Zstandard BLOBs)")]
+        Dreeve --> LocalDB[("SQLite Database\n- Activity (Distance, Time, Pace, HR)\n- ActivityStream (Zstandard BLOBs)")]
         StravaSync --> LocalDB
     end
 
     subgraph AnalyticsEngine["3. Analytics & Telemetry Engine (dreeve_engine.py)"]
         LocalDB --> ReadOnly["URI Read-Only Mode (?mode=ro)"]
-        ReadOnly --> Decompress["📦 Zstandard Stream Decompressor"]
-        Decompress --> PlanParser["📝 Regex Workout Plan Parser"]
-        PlanParser --> Segmenter["⏱️ Work / Rest Segmenter & HR Drop Math"]
-        Segmenter --> Biostats["📐 Cardiac Drift & Pearson Regression ($r, R^2$)"]
-        Biostats --> Visualizer["🎨 Matplotlib (300 DPI) & Plotly Charts"]
+        ReadOnly --> Decompress["Zstandard Stream Decompressor"]
+        Decompress --> PlanParser["Regex Workout Plan Parser"]
+        PlanParser --> Segmenter["Work / Rest Segmenter & HR Drop Math"]
+        Segmenter --> Biostats["Cardiac Drift & Pearson Regression ($r, R^2$)"]
+        Biostats --> Visualizer["Matplotlib (300 DPI) & Plotly Charts"]
     end
 
     subgraph Presentation["4. Presentation Layer (app.py)"]
-        Visualizer --> StreamlitUI["💬 Streamlit Web Chatbot (:8501)"]
-        StreamlitUI --> Browser["👤 Athlete / User (Browser)"]
+        Visualizer --> StreamlitUI["Streamlit Web Chatbot (:8501)"]
+        StreamlitUI --> Browser["Athlete / User (Browser)"]
     end
 ```
 
@@ -45,7 +45,7 @@ flowchart TD
 
 ---
 
-## 🗄️ Part 2: Preparing Your Running Database
+## Part 2: Preparing Your Running Database
 
 You only need **ONE** of the following data sources:
 
@@ -113,7 +113,7 @@ If you track runs using Garmin, Apple Watch, Coros, Polar, or smartphone apps th
 
 ---
 
-## 🚀 Part 3: Launching the Chatbot
+## Part 3: Launching the Chatbot
 
 Choose the deployment method that fits your environment:
 
@@ -205,9 +205,9 @@ Open **`http://localhost:8501`** in your browser.
 
 ---
 
-## 💬 Part 4: How to Chat with Your Running Coach
+## Part 4: How to Chat with Your Running Coach
 
-Once the web interface opens, the sidebar will show 🟢 **Connected to DB** with your total run count.
+Once the web interface opens, the sidebar will show **Connected to DB** with your total run count.
 
 ### Sample Prompts You Can Ask:
 
@@ -223,7 +223,7 @@ Once the web interface opens, the sidebar will show 🟢 **Connected to DB** wit
 
 ---
 
-## 🔒 Privacy & Data Sovereignty Guarantee
+## Privacy & Data Sovereignty Guarantee
 
 * **No Cloud AI / No Third Parties**: All mathematical parsing and telemetry computations run strictly on local CPU.
 * **Read-Only SQLite Attachment**: Database connections use SQLite `?mode=ro` with Write-Ahead Logging (WAL) to guarantee zero file locking or risk of database corruption.
