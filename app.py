@@ -309,23 +309,27 @@ def process_query(prompt: str):
     # Default Fallback / General Overview
     try:
         summary = dreeve_engine.get_summary(days=60, db_path=DB_PATH)
+        hr_info = summary.get('heart_rate_summary', {})
+        hr_text = f"{hr_info.get('mean_hr_bpm', 'N/A')} bpm ({hr_info.get('min_hr_bpm', '-')}\u2013{hr_info.get('max_hr_bpm', '-')} bpm)" if hr_info else "N/A"
+        
         return {
             "text": (
                 f"### 🏃 Dreeve Running Summary (Last 60 Days)\n\n"
-                f"- **Total Distance:** `{summary['distance']['total_km']} km` across `{summary['activities_count']}` runs\n"
-                f"- **Active Duration:** `{summary['duration']['total_hours']} hours`\n"
-                f"- **Average Pace:** `{summary['pace']['average_pace']}` (Best: `{summary['pace']['best_pace']}`)\n"
-                f"- **Mean Heart Rate:** `{summary['heart_rate']['mean_bpm']} bpm` (Range: `{summary['heart_rate']['min_bpm']}` – `{summary['heart_rate']['max_bpm']}` bpm)\n\n"
+                f"- **Total Distance:** `{summary.get('total_distance_km', 0):.1f} km` across `{summary.get('total_activities', 0)}` runs\n"
+                f"- **Active Duration:** `{summary.get('total_moving_time_hours', 0):.1f} hours`\n"
+                f"- **Average Pace:** `{summary.get('overall_avg_pace', 'N/A')}` (Best: `{summary.get('best_pace', 'N/A')}`)\n"
+                f"- **Mean Heart Rate:** `{hr_text}`\n\n"
                 f"**You can ask me questions like:**\n"
+                f"- *'Did my aerobic capacity improve in later weeks of October?'*\n"
                 f"- *'Analyze my interval session: 1k warmup + 4x1k @6:15 with 90s walk + 0.5k cooldown'*\n"
                 f"- *'Show pace vs heart rate scatter'* or *'Show dashboard'*\n"
                 f"- *'Show cardiac drift in kilometer splits'*\n"
                 f"- *'What is my weekly mileage breakdown?'*\n"
-                f"- *'List recent runs'* "
+                f"- *'List recent runs'*"
             )
         }
     except Exception as e:
-        return {"text": f"Hello! Ask me any question about your running performance, interval workouts, cardiac drift, or efficiency."}
+        return {"text": f"⚠️ Error generating overview: {str(e)}"}
 
 # ==========================================
 # Sidebar UI
