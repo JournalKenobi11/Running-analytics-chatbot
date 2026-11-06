@@ -18,10 +18,16 @@ import matplotlib.ticker as ticker
 from matplotlib.patches import Patch
 from scipy import stats
 import zstandard
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
+_DEFAULT_DB = Path(__file__).resolve().parent.parent / "dreeve" / "storage" / "database" / "dreeve.db"
 DB_DEFAULT_PATH = os.environ.get(
     "DREEVE_DB_PATH",
-    str(Path.home() / "projects" / "dreeve" / "storage" / "database" / "dreeve.db")
+    str(_DEFAULT_DB if _DEFAULT_DB.exists() else "dreeve.db")
 )
 
 OUTPUT_DEFAULT_DIR = os.environ.get(

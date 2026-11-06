@@ -180,9 +180,9 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 4. Set environment variables & run
-export DREEVE_DB_PATH="/path/to/dreeve.db"
-export DREEVE_OUTPUT_DIR="./output"
+# 4. Configure environment variables (or copy .env.example to .env)
+cp .env.example .env
+# Edit .env to set your DREEVE_DB_PATH or Strava credentials
 
 streamlit run app.py --server.port 8501 --server.address 0.0.0.0
 ```

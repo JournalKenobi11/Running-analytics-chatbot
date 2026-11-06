@@ -9,6 +9,13 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 
+from pathlib import Path
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # Add engine directory to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
@@ -17,9 +24,8 @@ if current_dir not in sys.path:
 import dreeve_engine
 
 # Configuration
-from pathlib import Path
-
-DB_PATH = os.environ.get("DREEVE_DB_PATH", str(Path.home() / "projects" / "dreeve" / "storage" / "database" / "dreeve.db"))
+_DEFAULT_DB = Path(__file__).resolve().parent.parent / "dreeve" / "storage" / "database" / "dreeve.db"
+DB_PATH = os.environ.get("DREEVE_DB_PATH", str(_DEFAULT_DB if _DEFAULT_DB.exists() else "dreeve.db"))
 OUTPUT_DIR = os.environ.get("DREEVE_OUTPUT_DIR", str(Path(__file__).resolve().parent / "output"))
 
 st.set_page_config(

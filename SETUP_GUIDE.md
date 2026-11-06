@@ -123,8 +123,11 @@ Choose the deployment method that fits your environment:
 
 Docker packages Python, all scientific libraries (`numpy`, `scipy`, `pandas`, `matplotlib`), font libraries, and Streamlit into a self-contained container.
 
-#### 1. Configure Mounts in `docker-compose.yml`
-Ensure your volume path points to your SQLite database file (`dreeve.db` or `running.db`):
+#### 1. Copy Environment Configuration
+```bash
+cp .env.example .env
+```
+Edit `.env` to set your `DREEVE_DB_PATH` or Strava credentials. In `docker-compose.yml`, `env_file: .env` is automatically mounted.
 
 ```yaml
 services:
@@ -132,11 +135,13 @@ services:
     build: .
     container_name: dreeve-running-chat
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "8501:8501"
     volumes:
       # If using Dreeve:
-      - /path/to/dreeve/storage/database:/data/database:ro
+      - ${DREEVE_DB_DIR:-../dreeve/storage/database}:/data/database:ro
       # OR if using Strava running.db:
       # - ./running.db:/data/database/dreeve.db:ro
       - ./output:/app/output:rw
@@ -187,12 +192,11 @@ pip install -r requirements.txt
 ```
 
 #### 3. Launch the Chatbot
-Point the environment variable to your SQLite file and start Streamlit:
+Copy `.env.example` to `.env` and set your database path, then launch Streamlit:
 
 ```bash
-# For Linux/macOS bash/zsh:
-export DREEVE_DB_PATH="/path/to/running.db"   # or /path/to/dreeve.db
-export DREEVE_OUTPUT_DIR="./output"
+cp .env.example .env
+# Edit .env to set your DREEVE_DB_PATH (e.g. /path/to/running.db or /path/to/dreeve.db)
 
 streamlit run app.py --server.port 8501
 ```

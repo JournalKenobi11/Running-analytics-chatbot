@@ -8,6 +8,11 @@ import urllib.request
 import urllib.parse
 from datetime import datetime
 import zstandard
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 DB_PATH = os.environ.get("RUNNING_DB_PATH", os.environ.get("DREEVE_DB_PATH", "running.db"))
 CLIENT_ID = os.environ.get("STRAVA_CLIENT_ID")
