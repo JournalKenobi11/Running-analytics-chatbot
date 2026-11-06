@@ -959,7 +959,7 @@ for msg in st.session_state.messages:
         if isinstance(c, dict):
             st.markdown(c.get("text", ""))
             if c.get("image_path") and os.path.exists(c["image_path"]):
-                st.image(c["image_path"], caption="Telemetry Visualization", use_column_width=True)
+                st.image(c["image_path"], caption="Telemetry Visualization", use_container_width=True)
             if c.get("weekly_df") is not None:
                 w_df = c["weekly_df"]
                 fig = px.bar(
@@ -989,7 +989,7 @@ if user_input:
             )
             st.markdown(ans.get("text", ""))
             if ans.get("image_path") and os.path.exists(ans["image_path"]):
-                st.image(ans["image_path"], caption="Telemetry Visualization", use_column_width=True)
+                st.image(ans["image_path"], caption="Telemetry Visualization", use_container_width=True)
             if ans.get("weekly_df") is not None:
                 w_df = ans["weekly_df"]
                 fig = px.bar(
