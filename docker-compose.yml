@@ -1,0 +1,21 @@
+services:
+  dreeve-running-chat:
+    build: .
+    container_name: dreeve-running-chat
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    volumes:
+      - /home/journalkenobi/projects/dreeve/storage/database:/data/database:ro
+      - ./output:/app/output:rw
+    environment:
+      - DREEVE_DB_PATH=/data/database/dreeve.db
+      - DREEVE_OUTPUT_DIR=/app/output
+      - TZ=Asia/Kolkata
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    name: homelab
+    external: true
