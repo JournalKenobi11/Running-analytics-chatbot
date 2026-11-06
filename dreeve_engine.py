@@ -6,6 +6,7 @@ High-performance, token-efficient analytics and visualization for Dreeve running
 
 import os
 import sys
+from pathlib import Path
 import sqlite3
 import argparse
 import json
