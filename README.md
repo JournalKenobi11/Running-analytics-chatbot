@@ -11,6 +11,9 @@ An interactive, self-hosted web chatbot and personal running coach. It analyzes 
 
 Runs **100% locally on your machine's CPU power** with **zero external LLM API costs ($0.00), zero cloud token usage, and 100% athlete data privacy**.
 
+> [!TIP]
+> 📖 **First-time setup?** Check out the comprehensive [**Setup & Architecture Guide (`SETUP_GUIDE.md`)**](SETUP_GUIDE.md) for a full architectural deep-dive, Strava database preparation walkthrough, and side-by-side Docker vs. Non-Docker guides for Linux & macOS.
+
 ---
 
 ## 📸 Key Capabilities
@@ -92,6 +95,13 @@ By default, Strava tokens only grant `read` access. To allow the chatbot to insp
      -F grant_type=authorization_code
    ```
 5. The JSON response contains your `"refresh_token"`. Save your `Client ID`, `Client Secret`, and `Refresh Token`.
+
+### Step 3: Run `sync_strava.py` to Build Your Local Running Database
+Add your credentials to `.env`, then run the included sync script:
+```bash
+python sync_strava.py
+```
+This connects to Strava, downloads your running activities with second-by-second sensor streams (`time`, `distance`, `heartrate`, `cadence`, `altitude`), compresses them with Zstandard, and creates a clean `running.db` file ready for the chatbot!
 
 ---
 
