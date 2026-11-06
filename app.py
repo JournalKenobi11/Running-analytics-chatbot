@@ -161,20 +161,30 @@ def process_query(prompt: str):
             splits_data = dreeve_engine.get_splits_analysis(month="2026-10", summary_only=True, db_path=DB_PATH)
             summary = splits_data.get("summary", splits_data)
             
+            total_km = summary.get("total_splits_extracted", summary.get("total_kilometers_recorded", 0))
+            median_p = summary.get("median_pace", summary.get("average_split_pace", "N/A"))
+            fastest_p = summary.get("fastest_split_pace", "-")
+            mean_hr = summary.get("mean_heart_rate_overall", "N/A")
+            hr_range_overall = summary.get("heart_rate_range_bpm", "")
+            
             md = [
                 "### 📉 Kilometer Splits & Cardiac Drift Progression (October 2026)",
-                f"- **Total Kilometers Analyzed:** `{summary.get('total_kilometers_recorded', 0)}`",
-                f"- **Average Split Pace:** `{summary.get('average_split_pace', 'N/A')}`",
-                f"- **Overall Mean HR:** `{summary.get('mean_heart_rate_overall', 'N/A')} bpm` ({summary.get('heart_rate_range_bpm', '')})",
+                f"- **Total Kilometers Analyzed:** `{total_km}` splits across `{summary.get('activities_evaluated', 0)}` runs",
+                f"- **Median Split Pace:** `{median_p}` (Fastest: `{fastest_p}`)",
+                f"- **Overall Mean HR:** `{mean_hr} bpm` ({hr_range_overall})",
                 "\n#### 🩺 Kilometer Progression Table"
             ]
             
             drift = summary.get("cardiac_drift_progression", {})
             if drift:
-                md.append("| KM Index | Split Count | Mean Pace | Mean HR | HR Range |")
+                md.append("| Kilometer | Splits Count | Average Pace | Mean HR | HR Range |")
                 md.append("|---|---|---|---|---|")
-                for km_k, v in drift.items():
-                    md.append(f"| KM {km_k} | {v['splits_count']} | {v['mean_pace']} | **{v['mean_hr']} bpm** | {v['min_hr']}–{v['max_hr']} bpm |")
+                for km_label, v in drift.items():
+                    splits_cnt = v.get("splits_evaluated", v.get("splits_count", "-"))
+                    pace = v.get("avg_pace", v.get("mean_pace", "-"))
+                    hr_bpm = f"{v.get('mean_hr_bpm', v.get('mean_hr', '-'))} bpm" if (v.get("mean_hr_bpm") or v.get("mean_hr")) else "-"
+                    hr_rng = v.get("hr_range", "-")
+                    md.append(f"| **{km_label}** | {splits_cnt} | {pace} | **{hr_bpm}** | {hr_rng} |")
                     
             return {"text": "\n".join(md)}
         except Exception as e:
